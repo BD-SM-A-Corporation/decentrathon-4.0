@@ -1,6 +1,11 @@
 from paddleocr import PPStructureV3
 from transformers import pipeline
 from image_preprocessing import preprocess_image
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Preprocessor:
     _instance = None
@@ -27,18 +32,39 @@ class Preprocessor:
         result = self.paddleocr_pipeline.predict(input=image_path)
         return result
     
-    def postprocess(self, result):
-        # Put here Gemini postprocessing
-        return result
-    
-    
 class Postprocessor:
-    def __init__(self, model_name="gemini-2.0-flash"):
-        self.gemini = pipeline("text-generation", model=model_name)
-    
-    def postprocess(self, result):
-        # Put here Gemini postprocessing
-        return result
+
+    def __init__(self, model_name: str, system_instruction_file: str = ""):
+
+        try:
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise ValueError("GOOGLE_API_KEY was not found.")
+            genai.configure(api_key=api_key)
+
+            with open(system_instruction_file, "r", encoding="utf-8") as f:
+                system_instruction = f.read().strip()
+            self.model = genai.GenerativeModel(model_name, system_instruction=system_instruction)
+            print(f"'{system_instruction}' successfully initialized.")
+            print(f"'{model_name}' successfully initialized.")
+
+        except Exception as e:
+            print(f"error: {e}")
+            self.model = None
+
+    def postprocess(self, input: str) -> str:
+
+        if not self.model:
+            return "Postprocess model is not initialized."
+            
+        try:
+            response = self.model.generate_content(input)
+            return response.text
+        
+        except Exception as e:
+            return f"error while processing: {e}"
+
+
 
 class DonutOCR:
     def __init__(self, model_name="Akajackson/donut_rus"):
