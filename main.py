@@ -4,10 +4,10 @@ import os
 import time
 import zipfile
 import io
-from classes import Preprocessor, Postprocessor, DonutOCR, StreamlitInterface
+from classes import Preprocessor, Postprocessor, DonutOCR
 
-# Upload multiple files
-uploaded_files = st.file_uploader("Upload images", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
+
+uploaded_files = st.file_uploader("Upload images", type=["png", "jpg", "jpeg", "pdf"], accept_multiple_files=True)
 
 if not uploaded_files:
     st.info("Please upload at least one image")
@@ -15,10 +15,10 @@ if not uploaded_files:
 
 preprocessor = Preprocessor()
 
-results = []  # store all results (filename, content)
+results = [] 
 
 for uploaded_file in uploaded_files:
-    # Save temporarily
+    
     image_path = os.path.join("temp", uploaded_file.name)
     os.makedirs("temp", exist_ok=True)
     with open(image_path, "wb") as f:
@@ -26,7 +26,7 @@ for uploaded_file in uploaded_files:
 
     st.info(f"Processing file: {uploaded_file.name}")
 
-    # PaddleOCR
+    
     paddle_result = preprocessor.predict(image_path)
     print(str(paddle_result) + "\n\n")
 
@@ -35,7 +35,7 @@ for uploaded_file in uploaded_files:
         res.save_to_json("output")
         res.save_to_markdown("output")
 
-    # Check if file exists
+   
     file_path = "./output/uploaded.md"
     if not os.path.exists(file_path):
         st.warning(f"⚠️ Result file not found for {uploaded_file.name}")
@@ -56,11 +56,11 @@ for uploaded_file in uploaded_files:
         except Exception as e:
             st.error(f"Error during postprocessing {uploaded_file.name}: {str(e)}")
 
-# Display results and build ZIP
+
 if results:
     st.title("📄 Processing results")
 
-    # Create an in-memory ZIP file
+    
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
         for fname, output in results:
@@ -69,7 +69,7 @@ if results:
 
     zip_buffer.seek(0)
 
-    # Download button for all results in one ZIP
+    
     st.download_button(
         label="⬇️ Download all results as ZIP",
         data=zip_buffer,
@@ -77,7 +77,7 @@ if results:
         mime="application/zip"
     )
 
-    # Also show results inline
+    
     for fname, output in results:
         st.subheader(fname)
         st.markdown("---")
