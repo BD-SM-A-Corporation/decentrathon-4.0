@@ -1,5 +1,5 @@
 {
-    "input_path": "uploads/uploaded.jpg",
+    "input_path": "temp/beta2.jpg",
     "page_index": null,
     "model_settings": {
         "use_doc_preprocessor": true,
